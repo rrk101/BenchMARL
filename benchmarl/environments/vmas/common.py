@@ -7,7 +7,7 @@
 from typing import Callable, Dict, List, Optional
 
 from torchrl.data import CompositeSpec
-from torchrl.envs import EnvBase
+from torchrl.envs import EnvBase, MarlGroupMapType
 from torchrl.envs.libs.vmas import VmasEnv
 
 from benchmarl.environments.common import Task
@@ -36,6 +36,7 @@ class VmasTask(Task):
     SIMPLE_TAG = None
     SIMPLE_WORLD_COMM = None
 
+    # Added groupmap argument
     def get_env_fun(
         self,
         num_envs: int,
@@ -51,6 +52,7 @@ class VmasTask(Task):
             device=device,
             categorical_actions=True,
             clamp_actions=True,
+            group_map=MarlGroupMapType.ONE_GROUP_PER_AGENT,
             **self.config,
         )
 
