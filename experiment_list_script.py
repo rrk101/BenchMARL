@@ -13,8 +13,8 @@ algorithm_config = IppoConfig.get_from_yaml()
 model_config = MlpConfig.get_from_yaml()
 critic_model_config = MlpConfig.get_from_yaml()
 
-experiment_config.max_n_iters = 2
-experiment_config.loggers = []
+experiment_config.max_n_iters = 30
+experiment_config.loggers = ["wandb"]
 global_seed = 0
 
 experiment = Experiment(
@@ -31,9 +31,14 @@ experiment.run()
 
 algorithm_config = Custom_IppoConfig.get_from_yaml()
 experiment_config.share_experiences = True
-share_experiences_freqs = [1, 5, 10, 50, 100]
-communication_bandwidths = [0.001, 0.01, 0.1, 0.5, 1.0]
-PER_params = [(0.1, 0.0), (0.5, 0.4), (0.6, 0.4), (0.7, 0.5), (1.0, 0.7)]
+# share_experiences_freqs = [1, 5, 10, 50, 100]
+# communication_bandwidths = [0.001, 0.01, 0.1, 0.5, 1.0]
+# PER_params = [(0.1, 0.0), (0.5, 0.4), (0.6, 0.4), (0.7, 0.5), (1.0, 0.7)]
+# PER_params = PER_params[::-1] #reverse the list
+
+share_experiences_freqs = [1, 10, 100]
+communication_bandwidths = [0.01, 0.1, 1.0]
+PER_params = [(0.6, 0.4), (0.7, 0.5), (1.0, 0.7)]
 PER_params = PER_params[::-1] #reverse the list
 
 for freq in share_experiences_freqs:
