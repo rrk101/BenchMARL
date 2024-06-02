@@ -47,6 +47,9 @@ class ExperimentConfig:
     Parameters in this class aim to be agnostic of the algorithm, task or model used.
     To know their meaning, please check out the descriptions in ``benchmarl/conf/experiment/base_experiment.yaml``
     """
+    share_experiences: bool = MISSING
+    share_experiences_freq: int = MISSING
+    share_experiences_bandwidth: float = MISSING
 
     sampling_device: str = MISSING
     train_device: str = MISSING
@@ -593,8 +596,35 @@ class Experiment(CallbackNotifier):
 
             # Update policy in collector
             self.collector.update_policy_weights_()
+            # this may be a good place to share experiences as they've trained 
+            # for atleast one time, one can use a counter to say if the experience should be shared
+            # in this iteration(use variable self.n_iters_performed)
+            # note: sampler should not be SamplerWithoutReplacement
+            # for group in self.train_group_map.keys():
+            #     print(f"group : {group}")
+            #     print(self.replay_buffers[group])
+            #     print("---------------------------------------------------------------")
+            sharing_experiences_time = time.time()
+            if self.config.share_experiences:
+                if (self.n_iters_performed+1)%self.config.share_experiences_freq == 0:
+                    exps = {}
+                    # print(f"Succesfully evaluated shared_experiences as True on iteration: {self.n_iters_performed+1}")
+                    for group in self.train_group_map.keys():
+                        num_samples = int(self.config.share_experiences_bandwidth*len(self.replay_buffers[group]))
+                        # for the case if num_samples becomes 0
+                        num_samples = max(1, num_samples) 
+                        # print(f"num_samples : {num_samples}")
+                        exps[group] = self.replay_buffers[group].sample(num_samples)
+                    for group in self.train_group_map.keys():
+                        for pgroup in self.train_group_map.keys():
+                            if pgroup != group:
+                                self.replay_buffers[group].extend(exps[pgroup])
+                    del exps
+
+               
 
             # Timers
+            sharing_experiences_time = time.time() - sharing_experiences_time
             training_time = time.time() - training_start
             iteration_time = collection_time + training_time
             self.total_time += iteration_time
@@ -602,6 +632,7 @@ class Experiment(CallbackNotifier):
                 {
                     "timers/collection_time": collection_time,
                     "timers/training_time": training_time,
+                    "timers/sharing_experiences_time": sharing_experiences_time,
                     "timers/iteration_time": iteration_time,
                     "timers/total_time": self.total_time,
                     "counters/current_frames": current_frames,
@@ -651,7 +682,10 @@ class Experiment(CallbackNotifier):
         loss_vals = self.losses[group](subdata)
         training_td = loss_vals.detach()
         loss_vals = self.algorithm.process_loss_vals(group, loss_vals)
-
+        # we will add the relevant errors, let it be x
+        # then, priority = x * torch.ones(subdata.shape)
+        # we will update the priority of the subdata according to this new priority 
+        total_td_error = 0.0
         for loss_name, loss_value in loss_vals.items():
             if loss_name in self.optimizers[group].keys():
                 optimizer = self.optimizers[group][loss_name]
@@ -667,7 +701,19 @@ class Experiment(CallbackNotifier):
 
                 optimizer.step()
                 optimizer.zero_grad()
-        self.replay_buffers[group].update_tensordict_priority(subdata)
+                total_td_error += loss_value.detach()
+        if self.config.share_experiences == False:
+            self.replay_buffers[group].update_tensordict_priority(subdata)
+        else:
+            # share experiences is true, so we have to update the priority of the subdata
+            # according to the loss incurred
+            total_td_error = total_td_error.item()
+            # print(total_td_error)
+            priority = self.replay_buffers[group]._get_priority_vector(subdata)
+            priority = priority + (abs(total_td_error) * torch.ones(priority.shape, device=self.config.train_device))
+            subdata.set("td_error", priority)
+            self.replay_buffers[group].update_tensordict_priority(subdata)
+
         if self.target_updaters[group] is not None:
             self.target_updaters[group].step()
 
