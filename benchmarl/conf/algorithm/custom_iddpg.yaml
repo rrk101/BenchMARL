@@ -1,0 +1,11 @@
+defaults:
+  - custom_iddpg_config
+  - _self_
+
+
+share_param_critic: True
+loss_function: "l2"
+delay_value: True
+use_tanh_mapping: True
+PER_alpha: 0.6
+PER_beta: 0.4
