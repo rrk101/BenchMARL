@@ -60,13 +60,14 @@ max_n_frames: 10_000_000
 # Number of frames collected and each experiment iteration
 # on_policy_collected_frames_per_batch: 6000
 # my addition
-on_policy_collected_frames_per_batch: 65_536
+# this becomes the replay buffer size
+on_policy_collected_frames_per_batch: 60_000
 # Number of environments used for collection
 # If the environment is vectorized, this will be the number of batched environments.
 # Otherwise batching will be simulated and each env will be run sequentially.
 # on_policy_n_envs_per_worker: 10
 # my addition
-on_policy_n_envs_per_worker: 512
+on_policy_n_envs_per_worker: 600
 # This is the number of times collected_frames_per_batch will be split into minibatches and trained
 on_policy_n_minibatch_iters: 45
 # In on-policy algorithms the train_batch_size will be equal to the on_policy_collected_frames_per_batch
@@ -97,7 +98,7 @@ evaluation: True
 # Whether to render the evaluation (if rendering is available)
 render: True
 # Frequency of evaluation in terms of collected frames (this should be a multiple of on/off_policy_collected_frames_per_batch)
-evaluation_interval: 131_072 #120_000
+evaluation_interval: 120_000 #131_072 #120_000
 # Number of episodes that evaluation is run on
 evaluation_episodes: 10
 # If True, when stochastic policies are evaluated, their mode is taken, otherwise, if False, they are sampled
