@@ -15,6 +15,9 @@ from .masac import Masac, MasacConfig
 from .qmix import Qmix, QmixConfig
 from .vdn import Vdn, VdnConfig
 from .custom_ippo import Custom_Ippo, Custom_IppoConfig
+from .custom_iddpg import Custom_Iddpg, Custom_IddpgConfig
+from .custom_iql import Custom_Iql, Custom_IqlConfig
+from .custom_isac import Custom_Isac, Custom_IsacConfig
  
 classes = [
     "Iddpg",
@@ -37,6 +40,13 @@ classes = [
     "VdnConfig",
     "Custom_Ippo",
     "Custom_IppoConfig",
+    "Custom_Iddpg",
+    "Custom_IddpgConfig",
+    "Custom_Iql",
+    "Custom_IqlConfig",
+    "Custom_Isac",
+    "Custom_IsacConfig",
+
 ]
 
 # A registry mapping "algoname" to its config dataclass
@@ -52,4 +62,8 @@ algorithm_config_registry = {
     "vdn": VdnConfig,
     "iql": IqlConfig,
     "custom_ippo": Custom_IppoConfig,
+    "custom_iddpg": Custom_IddpgConfig,
+    "custom_iql": Custom_IqlConfig,
+    "custom_isac": Custom_IsacConfig,
+
 }
