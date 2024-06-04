@@ -50,6 +50,7 @@ class ExperimentConfig:
     share_experiences: bool = MISSING
     share_experiences_freq: int = MISSING
     share_experiences_bandwidth: float = MISSING
+    checkpoint_count: int = MISSING
 
     sampling_device: str = MISSING
     train_device: str = MISSING
@@ -612,7 +613,7 @@ class Experiment(CallbackNotifier):
                     for group in self.train_group_map.keys():
                         num_samples = int(self.config.share_experiences_bandwidth*len(self.replay_buffers[group]))
                         # for the case if num_samples becomes 0
-                        num_samples = max(1, num_samples) 
+                        num_samples = max(self.config.train_minibatch_size(self.on_policy), num_samples) 
                         # print(f"num_samples : {num_samples}")
                         exps[group] = self.replay_buffers[group].sample(num_samples)
                     for group in self.train_group_map.keys():
@@ -653,11 +654,18 @@ class Experiment(CallbackNotifier):
             # End of step
             self.n_iters_performed += 1
             self.logger.commit()
-            if (
-                self.config.checkpoint_interval > 0
-                and self.total_frames % self.config.checkpoint_interval == 0
-            ):
+            #instead of frame count, we will use number of checkpoints to be created
+            if self.config.checkpoint_count >= 1 and self.n_iters_performed==self.config.get_max_n_iters(self.on_policy):
                 self._save_experiment()
+            elif self.config.checkpoint_count > 1:
+                k = self.config.get_max_n_iters(self.on_policy) // self.config.checkpoint_count
+                if self.n_iters_performed%k == 0:
+                    self._save_experiment()
+            # if (
+            #     self.config.checkpoint_interval > 0
+            #     and self.total_frames % self.config.checkpoint_interval == 0
+            # ):
+                # self._save_experiment()
             pbar.update()
             sampling_start = time.time()
 
