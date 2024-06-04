@@ -119,3 +119,7 @@ restore_file: null
 # Interval for experiment saving in terms of collected frames (this should be a multiple of on/off_policy_collected_frames_per_batch).
 # Set it to 0 to disable checkpointing
 checkpoint_interval: 0
+
+#no. of checkpoints you want for the duration of the whole 'experiment', 'experiment' is one 'experiment.run()'
+# if  >= 1, one final checkpoint will always be created, at the end of the iterations
+checkpoint_count: 1
